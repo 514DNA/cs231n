@@ -76,7 +76,7 @@ class KNearestNeighbor(object):
                 # not use a loop over dimension, nor use np.linalg.norm().          #
                 #####################################################################
                 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+                dists[i, j] = np.sqrt(np.sum(np.square(X[i] - self.X_train[j])))
                 pass
 
                 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -100,7 +100,7 @@ class KNearestNeighbor(object):
             # Do not use np.linalg.norm().                                        #
             #######################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+            dists[i, :] = np.sqrt(np.sum(np.square(X[i] - self.X_train),axis=1))
             pass
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -130,13 +130,17 @@ class KNearestNeighbor(object):
         #       and two broadcast sums.                                         #
         #########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        XT = X.transpose()
+        trainT = self.X_train.transpose()
+        XX = np.reshape(np.dot(X,XT).diagonal(),(num_test,1))
+        traintrain = np.reshape(np.dot(self.X_train,trainT).diagonal(),(1,num_train))
+        dists = np.sqrt(XX - 2*np.dot(X,trainT) + traintrain)
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
 
-    def predict_labels(self, dists, k=1):
+    def predict_labels(self, dists, k):
         """
         Given a matrix of distances between test points and training points,
         predict a label for each test point.
@@ -163,6 +167,11 @@ class KNearestNeighbor(object):
             # Hint: Look up the function numpy.argsort.                             #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+            distarg = dists[i].argsort()
+          #  print(distarg)
+            for j in range(k):
+                closest_y.append(self.y_train[distarg[j]])
+         #   print(closest_y)
 
             pass
 
@@ -175,7 +184,7 @@ class KNearestNeighbor(object):
             # label.                                                                #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+            y_pred[i] = closest_y[0]
             pass
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
