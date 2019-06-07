@@ -43,7 +43,7 @@ class LinearClassifier(object):
         for it in range(num_iters):
             X_batch = None
             y_batch = None
-
+            a_batch = None
             #########################################################################
             # TODO:                                                                 #
             # Sample batch_size elements from the training data and their           #
@@ -56,6 +56,9 @@ class LinearClassifier(object):
             # replacement is faster than sampling without replacement.              #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+            a_batch = np.random.choice(np.arange(num_train),size=batch_size, replace=False)
+            X_batch = X[a_batch]
+            y_batch = y[a_batch]
 
             pass
 
@@ -71,6 +74,7 @@ class LinearClassifier(object):
             # Update the weights using the gradient and the learning rate.          #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+            self.W -= grad*learning_rate
 
             pass
 
@@ -96,6 +100,9 @@ class LinearClassifier(object):
           class.
         """
         y_pred = np.zeros(X.shape[0])
+        score = X.dot(self.W)
+        y_pred = score.argmax(axis=1)
+        #print(y_pred)
         ###########################################################################
         # TODO:                                                                   #
         # Implement this method. Store the predicted labels in y_pred.            #
