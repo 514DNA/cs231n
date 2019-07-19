@@ -205,7 +205,14 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # might prove to be helpful.                                          #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        avg = (np.sum(x,axis = 0)/N)
+        sq = np.sum(((x - avg)*(x - avg)),axis = 0)/N
+        xtemp = (x - avg)/np.sqrt(sq + eps)
+        out = gamma*xtemp + beta
+        cache = (x,avg,sq,xtemp,eps,gamma,beta)
+        running_mean = momentum * running_mean + (1 - momentum) * avg
+        running_var = momentum * running_var + (1 - momentum) * sq
+        
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -220,6 +227,9 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # Store the result in the out variable.                               #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        xtemp = (x - running_mean)/np.sqrt(running_var + eps)
+        out = gamma*xtemp + beta
+        
 
         pass
 
@@ -262,6 +272,19 @@ def batchnorm_backward(dout, cache):
     # might prove to be helpful.                                              #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    (x,avg,sq,xtemp,eps,gamma,beta) = cache
+    N, D = x.shape
+    dxtemp = dout*gamma
+    dxtemp1 = dxtemp / np.sqrt(sq + eps)
+    dxtemp2 = np.sum(dxtemp * (x - avg),axis = 0)
+    dsq = -0.5 * np.power((sq+eps),-1.5)*dxtemp2
+    davg = -np.sum(dxtemp1,axis = 0) + dsq * -2 *np.sum((x - avg),axis = 0)/N
+    dsq = dsq * (x - avg) * 2.0 / N
+    davg = davg / N
+    dx = dxtemp1 + dsq + davg
+    dsq = np.sum((dxtemp*(x - avg)),axis = 0)*(-0.5*np.power((sq + eps),-1.5))
+    dgamma = np.sum(dout * xtemp,axis = 0)
+    dbeta = np.sum(dout,axis = 0)
 
     pass
 
@@ -297,6 +320,14 @@ def batchnorm_backward_alt(dout, cache):
     # single statement; our implementation fits on a single 80-character line.#
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    (x,avg,sq,xtemp,eps,gamma,beta) = cache
+    N, D = x.shape
+    dxtemp = dout*gamma
+    dsq = np.sum((dxtemp*(x - avg)),axis = 0)*(-0.5*np.power((sq + eps),-1.5))
+    davg = (np.sum(dxtemp,axis = 0) * (-1/np.sqrt(sq + eps))) + (dsq *(np.sum((-2*(x - avg)),axis = 0))/N)
+    dx = dxtemp/np.sqrt(sq + eps) + dsq * 2 *(x - avg)/N + davg/N
+    dgamma = np.sum(dout * xtemp,axis = 0)
+    dbeta = np.sum(dout,axis = 0)
 
     pass
 
@@ -343,6 +374,13 @@ def layernorm_forward(x, gamma, beta, ln_param):
     # the batch norm code and leave it almost unchanged?                      #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    N, D = x.shape
+    avg = (np.sum(x,axis = 1,keepdims = True)/D)
+    sq = np.sum(((x - avg)*(x - avg)),axis = 1,keepdims = True)/D
+    xtemp = (x - avg)/np.sqrt(sq + eps)
+    out = gamma*xtemp + beta
+    cache = (x,avg,sq,xtemp,eps,gamma,beta)
+
 
     pass
 
@@ -378,6 +416,14 @@ def layernorm_backward(dout, cache):
     # still apply!                                                            #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    (x,avg,sq,xtemp,eps,gamma,beta) = cache
+    N, D = x.shape
+    dxtemp = dout*gamma
+    dsq = np.sum((dxtemp*(x - avg)),axis = 1,keepdims = True)*(-0.5*np.power((sq + eps),-1.5))
+    davg = (np.sum(dxtemp,axis = 1,keepdims = True) * (-1/np.sqrt(sq + eps))) + (dsq *(np.sum((-2*(x - avg)),axis = 1,keepdims = True))/D)
+    dx = dxtemp/np.sqrt(sq + eps) + dsq * 2 *(x - avg)/D + davg/D
+    dgamma = np.sum(dout * xtemp,axis = 0,keepdims = True)
+    dbeta = np.sum(dout,axis = 0,keepdims = True)
 
     pass
 
@@ -420,6 +466,7 @@ def dropout_forward(x, dropout_param):
 
     mask = None
     out = None
+    N,D = x.shape
 
     if mode == 'train':
         #######################################################################
@@ -427,7 +474,8 @@ def dropout_forward(x, dropout_param):
         # Store the dropout mask in the mask variable.                        #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        mask = (np.random.rand(N,D) > p)/(1 - p)
+        out = mask * x
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -439,6 +487,7 @@ def dropout_forward(x, dropout_param):
         # TODO: Implement the test phase forward pass for inverted dropout.   #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        out = x
 
         pass
 
@@ -470,6 +519,7 @@ def dropout_backward(dout, cache):
         # TODO: Implement training phase backward pass for inverted dropout   #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        dx = mask*dout
 
         pass
 
